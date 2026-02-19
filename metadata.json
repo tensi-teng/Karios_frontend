@@ -1,0 +1,7 @@
+{
+  "name": "Kairos - Privacy-First Digital Legacy",
+  "description": "Secure, time-locked data capsules on Sui with client-side encryption and zkLogin.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
