@@ -35,60 +35,64 @@ const Navigation: React.FC<NavigationProps> = ({ currentPath, setPath, user }) =
         </div>
 
         {/* Center Navigation */}
-        <div className="hidden md:flex items-center gap-10">
-          <NavLink
-            active={currentPath === '/dashboard' || currentPath.startsWith('/capsule/')}
-            onClick={() => setPath('/dashboard')}
-            icon={<LayoutDashboard className="w-4 h-4" />}
-            label="My Vault"
-          />
-          <NavLink
-            active={currentPath === '/create'}
-            onClick={() => setPath('/create')}
-            icon={<Plus className="w-4 h-4" />}
-            label="Create"
-          />
-          <NavLink
-            active={currentPath === '/unlock-vault'}
-            onClick={() => setPath('/unlock-vault')}
-            icon={<Key className="w-4 h-4" />}
-            label="Recipient Unlock"
-          />
-          <NavLink
-            active={currentPath === '/explore'}
-            onClick={() => setPath('/explore')}
-            icon={<Compass className="w-4 h-4" />}
-            label="Registry"
-          />
-          <NavLink
-            active={currentPath === '/icons'}
-            onClick={() => setPath('/icons')}
-            icon={<Layers className="w-4 h-4" />}
-            label="Icons"
-          />
-          <NavLink
-            active={currentPath === '/notifications'}
-            onClick={() => setPath('/notifications')}
-            icon={<Bell className="w-4 h-4" />}
-            label="Notification"
-          />
-          <NavLink
-            active={currentPath === '/history'}
-            onClick={() => setPath('/history')}
-            icon={<History className="w-4 h-4" />}
-            label="Activity log"
-          />
-        </div>
+        {user && (
+          <div className="hidden md:flex items-center gap-10">
+            <NavLink
+              active={currentPath === '/dashboard' || currentPath.startsWith('/capsule/')}
+              onClick={() => setPath('/dashboard')}
+              icon={<LayoutDashboard className="w-4 h-4" />}
+              label="My Vault"
+            />
+            <NavLink
+              active={currentPath === '/create'}
+              onClick={() => setPath('/create')}
+              icon={<Plus className="w-4 h-4" />}
+              label="Create"
+            />
+            <NavLink
+              active={currentPath === '/unlock-vault'}
+              onClick={() => setPath('/unlock-vault')}
+              icon={<Key className="w-4 h-4" />}
+              label="Recipient Unlock"
+            />
+            <NavLink
+              active={currentPath === '/explore'}
+              onClick={() => setPath('/explore')}
+              icon={<Compass className="w-4 h-4" />}
+              label="Registry"
+            />
+            <NavLink
+              active={currentPath === '/icons'}
+              onClick={() => setPath('/icons')}
+              icon={<Layers className="w-4 h-4" />}
+              label="Icons"
+            />
+            <NavLink
+              active={currentPath === '/notifications'}
+              onClick={() => setPath('/notifications')}
+              icon={<Bell className="w-4 h-4" />}
+              label="Notification"
+            />
+            <NavLink
+              active={currentPath === '/history'}
+              onClick={() => setPath('/history')}
+              icon={<History className="w-4 h-4" />}
+              label="Activity log"
+            />
+          </div>
+        )}
 
         {/* Right Actions */}
         <div className="flex items-center gap-10 shrink-0 ml-8">
-          <button
-            onClick={() => setPath('/create')}
-            className="hidden lg:flex items-center gap-2 bg-indigo-600/10 border border-indigo-500/30 text-indigo-300 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-indigo-600/20 transition-all uppercase tracking-widest"
-          >
-            <Plus className="w-3 h-3" />
-            New Capsule
-          </button>
+          {user && (
+            <button
+              onClick={() => setPath('/create')}
+              className="hidden lg:flex items-center gap-2 bg-indigo-600/10 border border-indigo-500/30 text-indigo-300 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-indigo-600/20 transition-all uppercase tracking-widest"
+            >
+              <Plus className="w-3 h-3" />
+              New Capsule
+            </button>
+          )}
 
           {user ? (
             <div
