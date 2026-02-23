@@ -9,6 +9,8 @@ import Explore from './pages/Explore.tsx';
 import UnlockPage from './pages/Unlock.tsx';
 import Profile from './pages/Profile.tsx';
 import GlobalAudit from './pages/GlobalAudit.tsx';
+import Notifications from './pages/Notifications.tsx';
+import Badges from './pages/Badges.tsx';
 import { Capsule, UserProfile } from './types.ts';
 
 const App: React.FC = () => {
@@ -20,7 +22,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const savedUser = localStorage.getItem('kairos_user');
     if (savedUser) setUser(JSON.parse(savedUser));
-    
+
     const savedCapsules = localStorage.getItem('kairos_capsules');
     if (savedCapsules) setCapsules(JSON.parse(savedCapsules));
   }, []);
@@ -63,9 +65,9 @@ const App: React.FC = () => {
           actor: 'Vault Guardian',
           status: 'SUCCESS' as const
         };
-        return { 
-          ...c, 
-          lastPing: Date.now(), 
+        return {
+          ...c,
+          lastPing: Date.now(),
           healthScore: 100,
           auditLog: [newPing, ...(c.auditLog || [])]
         };
@@ -90,8 +92,8 @@ const App: React.FC = () => {
         return <Landing onGetStarted={() => user ? setCurrentPath('/dashboard') : handleLogin()} />;
       case '/dashboard':
         return (
-          <Dashboard 
-            capsules={capsules} 
+          <Dashboard
+            capsules={capsules}
             onCreateClick={() => setCurrentPath('/create')}
             onViewCapsule={(id) => {
               setSelectedCapsuleId(id);
@@ -102,11 +104,15 @@ const App: React.FC = () => {
       case '/create':
         return <CreateCapsule onComplete={addCapsule} onCancel={() => setCurrentPath('/dashboard')} />;
       case '/explore':
-        return <Explore />;
+        return <Explore capsules={capsules} />;
       case '/unlock-vault':
         return <UnlockPage />;
       case '/history':
         return <GlobalAudit capsules={capsules} />;
+      case '/notifications':
+        return <Notifications capsules={capsules} />;
+      case '/icons':
+        return <Badges user={user} />;
       case '/profile':
         return user ? <Profile user={user} capsules={capsules} /> : <Landing onGetStarted={handleLogin} />;
       case '/login':
