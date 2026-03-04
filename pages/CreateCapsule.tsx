@@ -2,8 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, ChevronRight, ChevronLeft, Upload, Lock, CheckCircle, Search, Users, Settings, Plus, Trash2, Clock, Activity, AlertTriangle, Box, Hexagon, Layers } from 'lucide-react';
 import { CryptoService } from '../services/cryptoService.ts';
+import { SuiService } from '../services/suiService.ts';
+import { WalrusService } from '../services/walrusService.ts';
 import { CapsuleState, UnlockRuleType, UnlockRule, Beneficiary } from '../types.ts';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSignAndExecuteTransaction, useCurrentAccount } from '@mysten/dapp-kit';
+import { Transaction } from '@mysten/sui/transactions';
 
 interface CreateCapsuleProps {
   onComplete: (capsuleData: any) => void;
@@ -80,6 +84,8 @@ const CapsuleAssemblyAnimation = ({ isClosing = false }: { isClosing?: boolean }
 };
 
 const CreateCapsule: React.FC<CreateCapsuleProps> = ({ onComplete, onCancel }) => {
+  const account = useCurrentAccount();
+  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [showSummaryDetails, setShowSummaryDetails] = useState(false);
@@ -130,33 +136,68 @@ const CreateCapsule: React.FC<CreateCapsuleProps> = ({ onComplete, onCancel }) =
   };
 
   const handleFinish = async () => {
+    if (!account) {
+      alert("Please connect your wallet first.");
+      return;
+    }
     setLoading(true);
     try {
-      await CryptoService.encrypt(formData.secretData, formData.password);
-      // Wait for animation
-      setTimeout(() => {
-        onComplete({
-          ...formData,
-          id: Math.random().toString(36).substr(2, 9),
-          blobId: 'walrus_' + Math.random().toString(36).substr(2, 9),
-          sealProof: 'seal_proof_valid',
-          state: CapsuleState.ACTIVE,
-          createdAt: Date.now(),
-          lastPing: Date.now(),
-          beneficiaries: beneficiaries.length > 0 ? beneficiaries : [{ name: 'Default Recipient', email: 'recipient@kairos.io' }],
-          unlockRules: rules,
-          healthScore: 100,
-          isActivated: false,
-          files: uploadedFiles.map(f => ({ name: f.name, size: f.size, type: f.type })),
-          auditLog: [
-            { id: '1', timestamp: Date.now(), action: 'Capsule Created', actor: 'Owner', status: 'SUCCESS' }
-          ]
-        });
-        setLoading(false);
-      }, 2500);
+      // 1. Encrypt Data locally
+      const encryptedData = await CryptoService.encrypt(formData.secretData, formData.password);
+      
+      // 2. Real Walrus Upload
+      // We upload the encrypted JSON string as a blob.
+      const blobId = await WalrusService.uploadBlob(JSON.stringify(encryptedData));
+      
+      // 3. Generate Mock Integrity Hash
+      const sealRootHash = Array.from(new Uint8Array(32)); 
+
+      // 4. Create Sui Transaction with real blobId
+      const tx = new Transaction();
+      await SuiService.createCapsule(
+        tx,
+        formData.title,
+        formData.description,
+        SuiService.getCategoryNumber(formData.category),
+        blobId,
+        sealRootHash
+      );
+
+      // 5. Sign and Execute
+      signAndExecuteTransaction(
+        { transaction: tx },
+        {
+          onSuccess: (result) => {
+            onComplete({
+              ...formData,
+              id: result.digest, // Using digest as placeholder for object ID
+              blobId,
+              sealProof: 'seal_proof_valid',
+              state: CapsuleState.ACTIVE,
+              createdAt: Date.now(),
+              lastPing: Date.now(),
+              beneficiaries: beneficiaries.length > 0 ? beneficiaries : [{ name: 'Default Recipient', email: 'recipient@kairos.io' }],
+              unlockRules: rules,
+              healthScore: 100,
+              isActivated: false,
+              files: uploadedFiles.map(f => ({ name: f.name, size: f.size, type: f.type })),
+              auditLog: [
+                { id: '1', timestamp: Date.now(), action: 'Capsule Created', actor: 'Owner', status: 'SUCCESS' }
+              ]
+            });
+            setLoading(false);
+          },
+          onError: (error) => {
+            console.error('Transaction failed:', error);
+            alert("Transaction failed: " + error.message);
+            setLoading(false);
+          }
+        }
+      );
+
     } catch (e) {
       console.error(e);
-      alert("Encryption failed.");
+      alert("Walrus Upload or Transaction failed. Ensure your Walrus endpoint is reachable.");
       setLoading(false);
     }
   };

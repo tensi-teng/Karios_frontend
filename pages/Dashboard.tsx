@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Activity, ShieldCheck, Clock, Eye, Award, Bell, AlertTriangle, Layers, Filter, CheckCircle2, Zap } from 'lucide-react';
 import { Capsule, CapsuleState } from '../types.ts';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useCurrentAccount } from '@mysten/dapp-kit';
 
 interface DashboardProps {
   capsules: Capsule[];
@@ -10,9 +11,30 @@ interface DashboardProps {
   onPingAll?: () => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ capsules, onCreateClick, onViewCapsule, onPingAll }) => {
+const Dashboard: React.FC<DashboardProps> = ({ capsules: initialCapsules, onCreateClick, onViewCapsule, onPingAll }) => {
+  const account = useCurrentAccount();
+  const [capsules, setCapsules] = useState<Capsule[]>(initialCapsules);
   const [filter, setFilter] = useState<string>('ALL');
   const [isPingingAll, setIsPingingAll] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (account?.address) {
+      setLoading(true);
+      fetch(`http://localhost:3001/api/capsules/owner/${account.address}`)
+        .then(res => res.json())
+        .then(data => {
+          setCapsules(data);
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error('Error fetching capsules:', err);
+          setLoading(false);
+        });
+    } else {
+      setCapsules(initialCapsules);
+    }
+  }, [account, initialCapsules]);
 
   const filteredCapsules = filter === 'ALL'
     ? capsules
