@@ -21,7 +21,7 @@ const Dashboard: React.FC<DashboardProps> = ({ capsules: initialCapsules, onCrea
   useEffect(() => {
     if (account?.address) {
       setLoading(true);
-      fetch(`http://localhost:3001/api/capsules/owner/${account.address}`)
+      fetch(`/api/capsules/owner/${account.address}`)
         .then(res => res.json())
         .then(data => {
           setCapsules(data);

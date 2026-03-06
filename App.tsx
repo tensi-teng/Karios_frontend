@@ -11,6 +11,7 @@ import Profile from './pages/Profile.tsx';
 import GlobalAudit from './pages/GlobalAudit.tsx';
 import Notifications from './pages/Notifications.tsx';
 import Badges from './pages/Badges.tsx';
+import { Lock } from 'lucide-react';
 import { Capsule, UserProfile } from './types.ts';
 
 const App: React.FC = () => {
