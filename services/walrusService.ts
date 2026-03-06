@@ -4,9 +4,9 @@
  * to the Walrus decentralized storage network.
  */
 export class WalrusService {
-  // Default Devnet Aggregator/Publisher URLs
-  private static PUBLISHER_URL = 'https://publisher.devnet.walrus.space';
-  private static AGGREGATOR_URL = 'https://aggregator.devnet.walrus.space';
+  // Official Testnet Aggregator/Publisher URLs
+  private static PUBLISHER_URL = 'https://publisher.walrus-testnet.walrus.space';
+  private static AGGREGATOR_URL = 'https://aggregator.walrus-testnet.walrus.space';
 
   /**
    * Uploads an encrypted blob to Walrus.
@@ -16,7 +16,7 @@ export class WalrusService {
    */
   static async uploadBlob(data: string | Uint8Array, epochs: number = 1): Promise<string> {
     try {
-      const response = await fetch(`${this.PUBLISHER_URL}/v1/store?epochs=${epochs}`, {
+      const response = await fetch(`${this.PUBLISHER_URL}/v1/blobs?epochs=${epochs}`, {
         method: 'PUT',
         body: data,
       });
@@ -28,7 +28,6 @@ export class WalrusService {
       const result = await response.json();
       
       // Walrus returns blobId in various formats depending on the API version.
-      // Usually, it's in result.newlyCreated.blobObject.blobId or result.alreadyCertified.blobId
       const blobId = result.newlyCreated?.blobObject?.blobId || result.alreadyCertified?.blobId;
       
       if (!blobId) {
@@ -46,6 +45,6 @@ export class WalrusService {
    * Generates a display URL for a Walrus blob.
    */
   static getBlobUrl(blobId: string): string {
-    return `${this.AGGREGATOR_URL}/v1/get/${blobId}`;
+    return `${this.AGGREGATOR_URL}/v1/blobs/${blobId}`;
   }
 }

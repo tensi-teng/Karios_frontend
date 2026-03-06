@@ -2,27 +2,66 @@
 import React, { useState } from 'react';
 import { Key, Unlock, Download, ShieldCheck, ArrowRight, UserCircle, Users, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { CryptoService } from '../services/cryptoService';
+import { WalrusService } from '../services/walrusService';
 
 const UnlockPage: React.FC = () => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [decryptedData, setDecryptedData] = useState<string | null>(null);
+  const [password, setPassword] = useState('');
+  const [blobId, setBlobId] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   const handleUnlock = () => {
+    if (!blobId.trim()) {
+      setError("Please enter a valid Capsule Reference ID");
+      return;
+    }
+    setError(null);
     setLoading(true);
     setTimeout(() => {
       setStep(2);
       setLoading(false);
-    }, 2500);
+    }, 1500);
   };
 
-  const handleDecrypt = () => {
+  const handleDecrypt = async () => {
+    if (!password) {
+      setError("Please enter the master password");
+      return;
+    }
+
     setLoading(true);
-    setTimeout(() => {
-      setDecryptedData("CONFIDENTIAL: The master key for the legacy trust is 0x1942-SUI-LEGACY. All documents are stored in the Swiss safety deposit box #882.");
+    setError(null);
+
+    try {
+      // 1. Fetch the encrypted blob from Walrus
+      const response = await fetch(WalrusService.getBlobUrl(blobId));
+      if (!response.ok) {
+        throw new Error(`Failed to fetch from Walrus: ${response.statusText}`);
+      }
+      
+      const encryptedPayload = await response.text();
+      let parsedPayload;
+      
+      try {
+        parsedPayload = JSON.parse(encryptedPayload);
+      } catch (e) {
+        throw new Error("Retrieved data is not in the expected encrypted format.");
+      }
+
+      // 2. Decrypt the payload using the provided password
+      const decrypted = await CryptoService.decrypt(parsedPayload.encrypted, password);
+      
+      setDecryptedData(decrypted);
       setStep(4);
+    } catch (err: any) {
+      console.error("Decryption Error:", err);
+      setError(err.message || "Failed to decrypt. Invalid password or corrupted data.");
+    } finally {
       setLoading(false);
-    }, 2000);
+    }
   };
 
   return (
@@ -40,7 +79,17 @@ const UnlockPage: React.FC = () => {
               </div>
               
               <h1 className="text-4xl font-bold font-display mb-4 text-white">Legacy Unlock</h1>
-              <p className="text-gray-400 mb-12 text-lg">Claim a digital legacy left for you on Kairos. Use your social identity to verify your inheritance.</p>
+              <p className="text-gray-400 mb-8 text-lg">Claim a digital legacy left for you on Kairos. Enter the Capsule Reference ID provided by the owner.</p>
+              
+              <input 
+                type="text" 
+                placeholder="Capsule Reference (Walrus Blob ID)" 
+                value={blobId}
+                onChange={(e) => setBlobId(e.target.value)}
+                className="w-full bg-white/5 border border-white/10 rounded-[1.5rem] px-6 py-5 outline-none focus:border-indigo-500 mb-2 text-center text-lg text-white font-mono"
+              />
+              {error && <p className="text-red-400 text-sm mb-6">{error}</p>}
+              {!error && <div className="h-6 mb-2"></div>}
               
               <button 
                 onClick={handleUnlock}
@@ -49,7 +98,7 @@ const UnlockPage: React.FC = () => {
               >
                 {loading ? <div className="w-6 h-6 border-4 border-gray-300 border-t-black rounded-full animate-spin" /> : (
                   <>
-                    Sign in with Google
+                    Verify & Continue
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
@@ -91,9 +140,14 @@ const UnlockPage: React.FC = () => {
               <p className="text-gray-400 mb-8 leading-relaxed">Threshold reached. 2/3 heirs approved. Enter the master password to begin client-side decryption.</p>
               
               <input 
-                type="password" placeholder="Master Password" 
-                className="w-full bg-white/5 border border-white/10 rounded-[1.5rem] px-6 py-5 outline-none focus:border-indigo-500 mb-8 text-center text-2xl tracking-[0.5em] text-white"
+                type="password" 
+                placeholder="Master Password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-white/5 border border-white/10 rounded-[1.5rem] px-6 py-5 outline-none focus:border-indigo-500 mb-2 text-center text-2xl tracking-[0.5em] text-white"
               />
+              {error && <p className="text-red-400 text-sm mb-6">{error}</p>}
+              {!error && <div className="h-6 mb-2"></div>}
               
               <button 
                 onClick={handleDecrypt}
@@ -115,7 +169,7 @@ const UnlockPage: React.FC = () => {
                </div>
                
                <div className="bg-black/40 border border-white/5 rounded-[2rem] p-10 mb-10">
-                  <p className="text-xl leading-relaxed text-gray-200 italic">"{decryptedData}"</p>
+                  <p className="text-xl leading-relaxed text-gray-200 italic whitespace-pre-wrap">"{decryptedData}"</p>
                </div>
                
                <div className="grid grid-cols-2 gap-4">
