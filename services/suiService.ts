@@ -1,5 +1,5 @@
 import { Transaction } from '@mysten/sui/transactions';
-import { SuiClient, getFullnodeUrl } from '@mysten/sui/client';
+import { SuiJsonRpcClient, getJsonRpcFullnodeUrl } from '@mysten/sui/jsonRpc';
 import { Capsule, Beneficiary, UnlockRuleType } from '../types.ts';
 
 // --- Constants ---
@@ -8,7 +8,7 @@ const MODULE_NAME = 'capsule_engine';
 const CLOCK_OBJECT_ID = '0x6';
 
 // --- Sui Client Setup ---
-const suiClient = new SuiClient({ url: getFullnodeUrl('devnet') });
+const suiClient = new SuiJsonRpcClient({ url: getJsonRpcFullnodeUrl('devnet') });
 
 export class SuiService {
   /**

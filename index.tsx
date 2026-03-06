@@ -3,14 +3,14 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import { SuiClientProvider, WalletProvider, createNetworkConfig } from '@mysten/dapp-kit';
-import { getFullnodeUrl } from '@mysten/sui/client';
+import { getJsonRpcFullnodeUrl } from '@mysten/sui/jsonRpc';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import "@mysten/dapp-kit/dist/index.css";
 
 const { networkConfig } = createNetworkConfig({
-	devnet: { url: getFullnodeUrl('devnet') },
-	testnet: { url: getFullnodeUrl('testnet') },
-	mainnet: { url: getFullnodeUrl('mainnet') },
+	devnet: { url: getJsonRpcFullnodeUrl('devnet') },
+	testnet: { url: getJsonRpcFullnodeUrl('testnet') },
+	mainnet: { url: getJsonRpcFullnodeUrl('mainnet') },
 });
 const queryClient = new QueryClient();
 
